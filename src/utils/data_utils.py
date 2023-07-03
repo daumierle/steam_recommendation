@@ -92,7 +92,33 @@ def get_user_prev_games(data_path):
         json.dump(user_games, user_game_file)
 
 
+def get_label_test(data_path):
+    with open(os.path.join(data_path, "active_user_games_test.json"), "r", encoding="utf-8") as user_game_test_file:
+        user_games = json.load(user_game_test_file)
+
+    label_data = dict()
+    for uid, games in user_games.items():
+        label_data[uid] = list(set(games["owned_games"]).difference(set(games["prev_owned_games"])))
+
+    return label_data
+
+
+def get_all_games(data_path):
+    with open(os.path.join(data_path, "game_data_train.json"), "r", encoding="utf-8") as game_train_file:
+        train_games = json.load(game_train_file)
+
+    with open(os.path.join(data_path, "new_game_data_test.json"), "r", encoding="utf-8") as game_test_file:
+        test_games = json.load(game_test_file)
+
+    all_games = train_games
+    all_games.update(test_games)
+
+    with open(os.path.join(data_path, "all_game_data.json"), "w", encoding="utf-8") as all_game_file:
+        json.dump(all_games, all_game_file)
+
+
 if __name__ == "__main__":
-    steam_path = "F:\\Research\\datasets\\steam\\steam_data"
-    get_game_info(steam_path)
+    steam_path = "F:\\Research\\datasets\\steam"
+    # get_game_info(steam_path)
     # get_user_prev_games(steam_path)
+    get_all_games(steam_path)
