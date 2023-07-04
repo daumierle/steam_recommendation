@@ -14,3 +14,23 @@ class RandomModel:
         random.shuffle(new_games)
         return new_games[:20]
 
+
+class PopularityModel:
+    def __init__(self):
+        pass
+
+
+class SamenessModel:
+    def __init__(self, type_):
+        pass
+
+
+class ContentBasedModel:
+    def __init__(self):
+        pass
+
+
+class ClusteringModel:
+    def __init__(self):
+        pass
+
