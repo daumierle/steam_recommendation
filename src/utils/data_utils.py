@@ -1,6 +1,5 @@
 import os
 import json
-from tqdm import tqdm
 
 
 def get_genre(data_path):
@@ -92,17 +91,6 @@ def get_user_prev_games(data_path):
         json.dump(user_games, user_game_file)
 
 
-def get_label_test(data_path):
-    with open(os.path.join(data_path, "active_user_games_test.json"), "r", encoding="utf-8") as user_game_test_file:
-        user_games = json.load(user_game_test_file)
-
-    label_data = dict()
-    for uid, games in user_games.items():
-        label_data[uid] = list(set(games["owned_games"]).difference(set(games["prev_owned_games"])))
-
-    return label_data
-
-
 def get_all_games(data_path):
     with open(os.path.join(data_path, "game_data_train.json"), "r", encoding="utf-8") as game_train_file:
         train_games = json.load(game_train_file)
@@ -115,6 +103,32 @@ def get_all_games(data_path):
 
     with open(os.path.join(data_path, "all_game_data.json"), "w", encoding="utf-8") as all_game_file:
         json.dump(all_games, all_game_file)
+
+
+class SteamDataset:
+    def __init__(self, data_path):
+        self.data_path = data_path
+
+    def get_test_data(self):
+        with open(os.path.join(self.data_path, "active_user_games_test.json"), "r", encoding="utf-8") as user_game_test_file:
+            user_games = json.load(user_game_test_file)
+        return user_games
+
+    def get_all_games(self):
+        with open(os.path.join(self.data_path, "all_game_data.json"), "r", encoding="utf-8") as game_info_file:
+            all_games = json.load(game_info_file)
+        all_games = list(all_games.keys())
+        return all_games
+
+    def get_label_test(self):
+        with open(os.path.join(self.data_path, "active_user_games_test.json"), "r", encoding="utf-8") as user_game_test_file:
+            user_games = json.load(user_game_test_file)
+
+        label_data = dict()
+        for uid, games in user_games.items():
+            label_data[uid] = list(set(games["owned_games"]).difference(set(games["prev_owned_games"])))
+
+        return label_data
 
 
 if __name__ == "__main__":
