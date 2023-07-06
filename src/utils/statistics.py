@@ -44,8 +44,26 @@ def combine_user_game_files(data_path):
         json.dump(active_user_games, active_user_game_file)
 
 
+def merge_dataset(data_path):
+    all_game_data = {}
+
+    for file in os.listdir(data_path):
+        if file.startswith("all_game_data_extended"):
+            with open(os.path.join(data_path, file), "r", encoding="utf-8") as game_data:
+                game_data_info = json.load(game_data)
+
+            for game_id, game_details in game_data_info.items():
+                if "recommendations" in game_details:
+                    all_game_data[game_id] = game_details
+            # all_game_data.update(game_data_info)
+
+    with open(os.path.join(data_path, "all_game_data_extended.json"), "w", encoding="utf-8") as game_data_train:
+        json.dump(all_game_data, game_data_train)
+
+
 if __name__ == "__main__":
     steam_path = "F:\\Research\\datasets\\steam"
     # check_active_users(steam_path)
     train_test_stats(steam_path)
     # combine_user_game_files(steam_path)
+    # merge_dataset(steam_path)

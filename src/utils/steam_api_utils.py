@@ -3,7 +3,7 @@ import os
 from tqdm import tqdm
 from steam import Steam
 from decouple import config
-import codecs
+import argparse
 
 KEY = config("STEAM_API_KEY")
 
@@ -70,8 +70,7 @@ def get_new_game_info(data_path, cont=0, mode="train"):
 
     for g in tqdm(range(cont, len(search_game))):
         try:
-            game_info = steam.apps.get_app_details(search_game[g])
-            info_dict = json.loads(game_info)
+            info_dict = steam.apps.get_app_details(search_game[g])
 
             if info_dict is None or "data" not in info_dict[str(search_game[g])]:
                 unlisted_game.append(search_game[g])
@@ -126,29 +125,27 @@ def add_data_field(data_path, cont=0):
 
     for game_id in tqdm(list(game_data.keys())[cont:]):
         try:
-            game_info = steam.apps.get_app_details(game_id)
-            decoded_data = codecs.decode(game_info.encode(), "utf-8-sig")
-            info_dict = json.loads(decoded_data)
+            info_dict = steam.apps.get_app_details(game_id)
 
-            if "recommendations" not in info_dict[game_id]["data"]:
-                game_data[game_id]["recommendations"] = None
-            else:
+            if info_dict and "data" in info_dict[game_id] and "recommendations" in info_dict[game_id]["data"]:
                 game_data[game_id]["recommendations"] = info_dict[game_id]["data"]["recommendations"]["total"]
-
-            if "detailed_description" not in info_dict[game_id]["data"]:
-                game_data[game_id]["detailed_description"] = ""
             else:
+                game_data[game_id]["recommendations"] = None
+
+            if info_dict and "data" in info_dict[game_id] and "detailed_description" in info_dict[game_id]["data"]:
                 game_data[game_id]["detailed_description"] = info_dict[game_id]["data"]["detailed_description"]
-
-            if "about_the_game" not in info_dict[game_id]["data"]:
-                game_data[game_id]["about_the_game"] = ""
             else:
+                game_data[game_id]["detailed_description"] = ""
+
+            if info_dict and "data" in info_dict[game_id] and "about_the_game" in info_dict[game_id]["data"]:
                 game_data[game_id]["about_the_game"] = info_dict[game_id]["data"]["about_the_game"]
-
-            if "header_image" not in info_dict[game_id]["data"]:
-                game_data[game_id]["header_image"] = ""
             else:
+                game_data[game_id]["about_the_game"] = ""
+
+            if info_dict and "data" in info_dict[game_id] and "header_image" in info_dict[game_id]["data"]:
                 game_data[game_id]["header_image"] = info_dict[game_id]["data"]["header_image"]
+            else:
+                game_data[game_id]["header_image"] = ""
 
         except:
             with open(os.path.join(data_path, f"all_game_data_extended_{cont}.json"), "w", encoding="utf-8") as new_game_data:
@@ -159,23 +156,19 @@ def add_data_field(data_path, cont=0):
         json.dump(game_data, new_game_data)
 
 
-def merge_dataset(data_path):
-    all_game_data = {}
-
-    for file in os.listdir(data_path):
-        if file.startswith("new_game_info"):
-            with open(os.path.join(data_path, file), "r", encoding="utf-8") as game_data:
-                game_data_info = json.load(game_data)
-            all_game_data.update(game_data_info)
-
-    with open(os.path.join(data_path, "game_data_train.json"), "w", encoding="utf-8") as game_data_train:
-        json.dump(all_game_data, game_data_train)
-
-
 if __name__ == "__main__":
     steam = Steam(KEY)
-    steam_path = "D:\\projects\\steam\\Steam Dataset"
-    # get_active_users(steam_path, cont=10023)
-    # get_new_game_info(steam_path, cont=0, mode="test")
-    add_data_field(steam_path, cont=439)
-    # merge_dataset(steam_path)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--steam_path",
+        default=None,
+        type=str,
+        required=True,
+        help="The path where the xlsx file is stored.",
+    )
+    args = parser.parse_args()
+
+    # get_active_users(args.steam_path, cont=10023)
+    # get_new_game_info(args.steam_path, cont=0, mode="test")
+    add_data_field(args.steam_path, cont=2639)
