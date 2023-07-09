@@ -105,34 +105,22 @@ def get_all_games(data_path):
         json.dump(all_games, all_game_file)
 
 
-class SteamDataset:
-    def __init__(self, data_path):
-        self.data_path = data_path
+def get_all_genres(data_path):
+    with open(os.path.join(data_path, "all_game_data_extended.json"), "r", encoding="utf-8") as all_game_file:
+        all_games = json.load(all_game_file)
 
-    def get_test_data(self):
-        with open(os.path.join(self.data_path, "active_user_games_test.json"), "r", encoding="utf-8") as user_game_test_file:
-            user_games = json.load(user_game_test_file)
-        return user_games
+    genres = list()
+    for game_id, game_details in all_games.items():
+        genres.extend(game_details['genres'])
+    genres = list(set(genres))
 
-    def get_all_games(self):
-        with open(os.path.join(self.data_path, "all_game_data.json"), "r", encoding="utf-8") as game_info_file:
-            all_games = json.load(game_info_file)
-        all_games = list(all_games.keys())
-        return all_games
-
-    def get_label_test(self):
-        with open(os.path.join(self.data_path, "active_user_games_test.json"), "r", encoding="utf-8") as user_game_test_file:
-            user_games = json.load(user_game_test_file)
-
-        label_data = dict()
-        for uid, games in user_games.items():
-            label_data[uid] = list(set(games["owned_games"]).difference(set(games["prev_owned_games"])))
-
-        return label_data
+    with open(os.path.join(data_path, "all_genres.json"), "w", encoding="utf-8") as all_genre_file:
+        json.dump(genres, all_genre_file)
 
 
 if __name__ == "__main__":
     steam_path = "F:\\Research\\datasets\\steam"
     # get_game_info(steam_path)
     # get_user_prev_games(steam_path)
+    # get_all_genres(steam_path)
     get_all_games(steam_path)
