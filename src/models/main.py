@@ -128,7 +128,7 @@ def run_gnn_models(data_path, model, mode):
         for val_sample in tqdm(val_loader):
             with torch.no_grad():
                 val_sample.to(device)
-                val_preds.append(model(val_sample))
+                val_preds.append(recsys(val_sample))
                 val_ground_truths.append(val_sample["user", "owned", "game"].edge_label)
 
         val_preds = torch.cat(val_preds, dim=0).cpu().numpy()
