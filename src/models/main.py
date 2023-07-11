@@ -139,7 +139,7 @@ def run_gnn_models(data_path, model, mode):
         # Save best model
         if auc > best_val_auc:
             print(f"=== Save new best model @ epoch {epoch} ===")
-            torch.save(recsys.state_dict(), saved_model_path)
+            torch.save(recsys.state_dict(), os.path.join(saved_model_path, "recsys_model.ckpt"))
             best_val_auc = auc
 
 
