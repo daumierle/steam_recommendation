@@ -2,6 +2,7 @@ import os
 import json
 import torch
 import pandas as pd
+from tqdm import tqdm
 
 import torch_geometric.transforms as T
 from torch_geometric.data import HeteroData
@@ -78,7 +79,7 @@ class SteamGraphData:
 
         # User-game dataframe
         user_ids, game_ids = list(), list()
-        for user_id, games in user_games.items():
+        for user_id, games in tqdm(user_games.items()):
             owned_games = games['owned_games']
             owned_games = [str(game) for game in owned_games if str(game) in train_game_ids]
             user_ids.extend([user_id] * len(owned_games))
