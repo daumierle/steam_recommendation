@@ -111,7 +111,7 @@ def run_gnn_models(data_path, model, mode):
 
     for epoch in range(1, 6):
         total_loss = total_examples = 0
-        for sampled_data in tqdm(train_loader):
+        for sampled_data in tqdm(train_loader, desc="Train"):
             optimizer.zero_grad()
             sampled_data.to(device)
             pred = recsys(sampled_data)
@@ -125,7 +125,7 @@ def run_gnn_models(data_path, model, mode):
 
         # Eval on validation set (using area under the curve score)
         val_preds, val_ground_truths = list(), list()
-        for val_sample in tqdm(val_loader):
+        for val_sample in tqdm(val_loader, desc="Eval"):
             with torch.no_grad():
                 val_sample.to(device)
                 val_preds.append(recsys(val_sample))
