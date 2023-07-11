@@ -51,9 +51,13 @@ def run_gnn_models(data_path, model, mode):
     :param mode: list of either ['train', 'test']
     :return:
     """
-    steam_graph = SteamGraphData(data_path)
-    unique_user_id, unique_game_id, game_features, edge_index_user_to_game = steam_graph.process_data()
-    data = steam_graph.steam_graph_data(unique_user_id, unique_game_id, game_features, edge_index_user_to_game)
+    if not os.path.exists(os.path.join(data_path, "steam_data.pt")):
+        steam_graph = SteamGraphData(data_path)
+        unique_user_id, unique_game_id, game_features, edge_index_user_to_game = steam_graph.process_data()
+        data = steam_graph.steam_graph_data(unique_user_id, unique_game_id, game_features, edge_index_user_to_game)
+        torch.save(data, os.path.join(data_path, "steam_data.pt"))
+    else:
+        data = torch.load(os.path.join(data_path, "steam_data.pt"), map_location=torch.device('cpu'))
 
     # Saved data path
     saved_model_path = os.path.join(data_path, f"graph_model/{model}")
