@@ -51,11 +51,11 @@ class SteamGraphData:
 
         return game_feat
 
-    def process_data(self):
-        with open(os.path.join(self.data_path, "active_user_games_train.json"), "r", encoding="utf-8") as user_game_file:
+    def process_data(self, mode):
+        with open(os.path.join(self.data_path, f"active_user_games_{mode}.json"), "r", encoding="utf-8") as user_game_file:
             user_games = json.load(user_game_file)
 
-        with open(os.path.join(self.data_path, "game_data_train.json"), "r", encoding="utf-8") as train_game_file:
+        with open(os.path.join(self.data_path, f"game_data_{mode}.json"), "r", encoding="utf-8") as train_game_file:
             train_games = json.load(train_game_file)
         train_game_ids = list(train_games.keys())
 

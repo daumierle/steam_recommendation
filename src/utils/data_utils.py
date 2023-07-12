@@ -91,6 +91,29 @@ def get_user_prev_games(data_path):
         json.dump(user_games, user_game_file)
 
 
+def get_game_data_test(data_path):
+    with open(os.path.join(data_path, "active_user_games_test.json"), "r", encoding="utf-8") as user_game_file:
+        user_games = json.load(user_game_file)
+
+    with open(os.path.join(data_path, "game_data_train.json"), "r", encoding="utf-8") as train_game_file:
+        train_games = json.load(train_game_file)
+
+    with open(os.path.join(data_path, "new_game_data_test.json"), "r", encoding="utf-8") as test_game_file:
+        test_games = json.load(test_game_file)
+
+    all_test_games = list()
+    for uid, games in user_games.items():
+        all_test_games.extend([str(game) for game in games['owned_games']])
+    all_test_games = list(set(all_test_games))
+
+    for game_id in all_test_games:
+        if game_id in train_games and game_id not in test_games:
+            test_games[game_id] = train_games[game_id]
+
+    with open(os.path.join(data_path, "game_data_test.json"), "w", encoding="utf-8") as all_test_game_file:
+        json.dump(test_games, all_test_game_file)
+
+
 def get_all_games(data_path):
     with open(os.path.join(data_path, "game_data_train.json"), "r", encoding="utf-8") as game_train_file:
         train_games = json.load(game_train_file)
@@ -123,4 +146,5 @@ if __name__ == "__main__":
     # get_game_info(steam_path)
     # get_user_prev_games(steam_path)
     # get_all_genres(steam_path)
-    get_all_games(steam_path)
+    get_game_data_test(steam_path)
+    # get_all_games(steam_path)
