@@ -31,19 +31,19 @@ class LinkClassifier(torch.nn.Module):
 
 
 class GNNModel(torch.nn.Module):
-    def __init__(self, data, model, hidden_channels, num_genres=74):
+    def __init__(self, num_user_nodes, num_game_nodes, metadata, model, hidden_channels, num_genres=74):
         super().__init__()
         # Since the dataset does not come with rich features, we also learn two embedding matrices for users and games
         self.game_lin = torch.nn.Linear(num_genres, hidden_channels)
-        self.user_emb = torch.nn.Embedding(data["user"].num_nodes, hidden_channels)
-        self.game_emb = torch.nn.Embedding(data["game"].num_nodes, hidden_channels)
+        self.user_emb = torch.nn.Embedding(num_user_nodes, hidden_channels)
+        self.game_emb = torch.nn.Embedding(num_game_nodes, hidden_channels)
         # Instantiate homogeneous GNN
         if model == "GraphSAGE":
             self.gnn = GraphSAGE(hidden_channels)
         else:
             raise NotImplementedError("Model not found!")
         # Convert GNN model into a heterogeneous variant
-        self.gnn = to_hetero(self.gnn, metadata=data.metadata())
+        self.gnn = to_hetero(self.gnn, metadata=metadata)
         self.classifier = LinkClassifier()
 
     def forward(self, data: HeteroData) -> torch.Tensor:

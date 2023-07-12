@@ -51,45 +51,48 @@ def run_gnn_models(data_path, model, mode):
     :param mode: either 'train' or 'test'
     :return:
     """
-    if not os.path.exists(os.path.join(data_path, f"{mode}_data.pt")):
+    if not os.path.exists(os.path.join(data_path, "train_data.pt")):
         steam_graph = SteamGraphData(data_path)
-        unique_user_id, unique_game_id, game_features, edge_index_user_to_game = steam_graph.process_data(mode)
-        data = steam_graph.steam_graph_data(unique_user_id, unique_game_id, game_features, edge_index_user_to_game)
-        torch.save(data, os.path.join(data_path, f"{mode}_data.pt"))
+        unique_user_id, unique_game_id, game_features, train_edge_index_user_to_game, test_edge_index_user_to_game = steam_graph.process_data()
+
+        train_data = steam_graph.steam_graph_data(unique_user_id, unique_game_id, game_features,
+                                                  train_edge_index_user_to_game)
+        test_data = steam_graph.steam_graph_data(unique_user_id, unique_game_id, game_features,
+                                                 test_edge_index_user_to_game)
+        torch.save(train_data, os.path.join(data_path, "train_data.pt"))
+        torch.save(test_data, os.path.join(data_path, "test_data.pt"))
     else:
-        data = torch.load(os.path.join(data_path, f"{mode}_data.pt"), map_location=torch.device('cpu'))
+        train_data = torch.load(os.path.join(data_path, "train_data.pt"), map_location=torch.device('cpu'))
+        test_data = torch.load(os.path.join(data_path, "test_data.pt"), map_location=torch.device('cpu'))
 
     # Saved data path
     saved_model_path = os.path.join(data_path, f"graph_model/{model}")
     if not os.path.isdir(saved_model_path):
         os.makedirs(saved_model_path)
 
-    # mode == train: training (80%), validation (10%), and testing edges (10%)
-    # mode == test : training (0%), validation (0%), and testing edges (100%)
-    # Across the training edges, we use 70% of edges for message passing, and 30% of edges for supervision.
-    # We further want to generate fixed negative edges for evaluation with a ratio of 2:1.
+    # Transform: - for train_data: training (80%), validation (20%), test (0%)
+    #            - for test_data: training (100%), validation (0%), test (0%)
+    # Note: training in test_data is actually test samples
     if mode == "train":
-        num_val = 0.1
-        num_test = 0.1
+        num_val = 0.2
+        disjoint_train_ratio = 0.3
     else:
         num_val = 0.0
-        num_test = 1.0
+        disjoint_train_ratio = 0.0
 
     transform = T.RandomLinkSplit(
         num_val=num_val,
-        num_test=num_test,
-        disjoint_train_ratio=0.3,
+        num_test=0.0,
+        disjoint_train_ratio=disjoint_train_ratio,
         neg_sampling_ratio=2.0,
         add_negative_train_samples=False,
         edge_types=("user", "owned", "game"),
-        rev_edge_types=("game", "rev_owned", "user"),
+        rev_edge_types=("game", "rev_owned", "user")
     )
-    train_data, val_data, test_data = transform(data)
-
-    recsys = GNNModel(data, model, hidden_channels=64)
-    recsys = recsys.to(device)
 
     if mode == "train":
+        train_data, val_data, _ = transform(train_data)
+
         # Train DataLoader
         edge_label_index = train_data["user", "owned", "game"].edge_label_index
         edge_label = train_data["user", "owned", "game"].edge_label
@@ -116,6 +119,9 @@ def run_gnn_models(data_path, model, mode):
             shuffle=False
         )
 
+        recsys = GNNModel(train_data['user'].num_nodes, train_data['game'].num_nodes, train_data.metadata(),
+                          model, hidden_channels=64)
+        recsys = recsys.to(device)
         optimizer = torch.optim.Adam(recsys.parameters(), lr=0.001)
         best_val_auc = 0
 
@@ -156,7 +162,12 @@ def run_gnn_models(data_path, model, mode):
         steam_dataset = SteamDataset(data_path)
         test_labels = steam_dataset.get_label_test()
 
+        test_data, _, _ = transform(test_data)
+
         # Load trained recsys model
+        recsys = GNNModel(test_data['user'].num_nodes, test_data['game'].num_nodes, test_data.metadata(),
+                          model, hidden_channels=64)
+        recsys = recsys.to(device)
         recsys.load_state_dict(torch.load(os.path.join(saved_model_path, "recsys_model.ckpt")))
         recsys.eval()
 
