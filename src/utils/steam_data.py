@@ -19,9 +19,8 @@ class SteamDataset:
         return user_games
 
     def get_all_games(self):
-        with open(os.path.join(self.data_path, "all_game_data.json"), "r", encoding="utf-8") as game_info_file:
+        with open(os.path.join(self.data_path, "all_game_data_extended.json"), "r", encoding="utf-8") as game_info_file:
             all_games = json.load(game_info_file)
-        all_games = list(all_games.keys())
         return all_games
 
     def get_label_test(self):

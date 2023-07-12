@@ -10,7 +10,7 @@ import torch_geometric.transforms as T
 from torch_geometric.loader import LinkNeighborLoader
 
 from utils.steam_data import SteamDataset, SteamGraphData
-from models.baselines import RandomModel
+from models.baselines import RandomModel, PopularityModel
 from models.gnn_basics import GNNModel
 from utils.metrics import Metrics
 
@@ -28,14 +28,17 @@ def run_baselines(data_path, models):
     all_game_data = steam_dataset.get_all_games()
 
     for model in models:
+        test_preds = list()
         if model == "random":
             recsys = RandomModel()
+            for uid, games in tqdm(test_data.items()):
+                test_preds.append(recsys.forward(games, list(all_game_data.keys())))
+        elif model == "popularity":
+            recsys = PopularityModel(type_="")
+            for uid, games in tqdm(test_data.items()):
+                test_preds.append(recsys.forward(games, test_data, all_game_data))
         else:
             raise NotImplementedError("Model not found!")
-
-        test_preds = list()
-        for uid, games in tqdm(test_data.items()):
-            test_preds.append(recsys.forward(games, all_game_data))
 
         # Evaluate
         print(f"+++ Evaluation: {model} model +++")
@@ -211,7 +214,7 @@ if __name__ == "__main__":
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     if args.method == "baseline":
-        run_baselines(args.data_path, ["random"])
+        run_baselines(args.data_path, ["random", "popularity"])
     elif args.method == "graph":
         run_gnn_models(args.data_path, "GraphSAGE", args.mode)
     else:
