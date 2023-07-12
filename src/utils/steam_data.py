@@ -40,6 +40,24 @@ class SteamGraphData:
     def __init__(self, data_path):
         self.data_path = data_path
 
+    def get_label_test(self):
+        with open(os.path.join(self.data_path, "active_user_games_test.json"), "r",
+                  encoding="utf-8") as user_game_test_file:
+            test_user_games = json.load(user_game_test_file)
+
+        with open(os.path.join(self.data_path, "active_user_games_train.json"), "r",
+                  encoding="utf-8") as user_game_train_file:
+            train_user_games = json.load(user_game_train_file)
+
+        label_data = dict()
+        for uid, games in train_user_games.items():
+            label_data[uid] = list(set(games["owned_games"]).difference(set(games["prev_owned_games"])))
+
+        for uid, games in test_user_games.items():
+            label_data[uid] = list(set(games["owned_games"]).difference(set(games["prev_owned_games"])))
+
+        return label_data
+
     def get_game_features(self, all_games):
         with open(os.path.join(self.data_path, "all_genres.json"), "r", encoding="utf-8") as all_genre_file:
             genres = json.load(all_genre_file)

@@ -51,8 +51,8 @@ def run_gnn_models(data_path, model, mode):
     :param mode: either 'train' or 'test'
     :return:
     """
+    steam_graph = SteamGraphData(data_path)
     if not os.path.exists(os.path.join(data_path, "train_data.pt")):
-        steam_graph = SteamGraphData(data_path)
         unique_user_id, unique_game_id, game_features, train_edge_index_user_to_game, test_edge_index_user_to_game = steam_graph.process_data()
 
         train_data = steam_graph.steam_graph_data(unique_user_id, unique_game_id, game_features,
@@ -159,8 +159,7 @@ def run_gnn_models(data_path, model, mode):
                 best_val_auc = auc
 
     else:
-        steam_dataset = SteamDataset(data_path)
-        test_labels = steam_dataset.get_label_test()
+        test_labels = steam_graph.get_label_test()
 
         test_data, _, _ = transform(test_data)
 
@@ -184,12 +183,12 @@ def run_gnn_models(data_path, model, mode):
             shuffle=False
         )
 
-        test_preds, test_ground_truths = list(), list()
+        test_preds = list()
         for test_sample in tqdm(test_loader, desc="Test"):
             with torch.no_grad():
                 test_sample.to(device)
                 test_preds.append(recsys(test_sample))
-        print(test_preds)
+        print(len(test_labels), len(test_preds), test_preds[0])
 
         # Evaluate
         print(f"+++ Evaluation: {model} model +++")
