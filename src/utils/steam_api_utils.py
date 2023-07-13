@@ -120,37 +120,39 @@ def get_new_game_info(data_path, cont=0, mode="train"):
 
 
 def add_data_field(data_path, cont=0):
-    with open(os.path.join(data_path, "all_game_data.json"), "r", encoding="utf-8") as existing_game_data:
+    with open(os.path.join(data_path, "all_game_data_extended.json"), "r", encoding="utf-8") as existing_game_data:
         game_data = json.load(existing_game_data)
 
     for game_id in tqdm(list(game_data.keys())[cont:]):
-        try:
-            info_dict = steam.apps.get_app_details(game_id)
+        if game_data[game_id]["recommendations"] is None and game_data[game_id]["detailed_description"] == "" and \
+                game_data[game_id]["about_the_game"] == "" and game_data[game_id]["header_image"] == "":
+            try:
+                info_dict = steam.apps.get_app_details(game_id)
 
-            if info_dict and "data" in info_dict[game_id] and "recommendations" in info_dict[game_id]["data"]:
-                game_data[game_id]["recommendations"] = info_dict[game_id]["data"]["recommendations"]["total"]
-            else:
-                game_data[game_id]["recommendations"] = None
+                if info_dict and "data" in info_dict[game_id] and "recommendations" in info_dict[game_id]["data"]:
+                    game_data[game_id]["recommendations"] = info_dict[game_id]["data"]["recommendations"]["total"]
+                else:
+                    game_data[game_id]["recommendations"] = None
 
-            if info_dict and "data" in info_dict[game_id] and "detailed_description" in info_dict[game_id]["data"]:
-                game_data[game_id]["detailed_description"] = info_dict[game_id]["data"]["detailed_description"]
-            else:
-                game_data[game_id]["detailed_description"] = ""
+                if info_dict and "data" in info_dict[game_id] and "detailed_description" in info_dict[game_id]["data"]:
+                    game_data[game_id]["detailed_description"] = info_dict[game_id]["data"]["detailed_description"]
+                else:
+                    game_data[game_id]["detailed_description"] = ""
 
-            if info_dict and "data" in info_dict[game_id] and "about_the_game" in info_dict[game_id]["data"]:
-                game_data[game_id]["about_the_game"] = info_dict[game_id]["data"]["about_the_game"]
-            else:
-                game_data[game_id]["about_the_game"] = ""
+                if info_dict and "data" in info_dict[game_id] and "about_the_game" in info_dict[game_id]["data"]:
+                    game_data[game_id]["about_the_game"] = info_dict[game_id]["data"]["about_the_game"]
+                else:
+                    game_data[game_id]["about_the_game"] = ""
 
-            if info_dict and "data" in info_dict[game_id] and "header_image" in info_dict[game_id]["data"]:
-                game_data[game_id]["header_image"] = info_dict[game_id]["data"]["header_image"]
-            else:
-                game_data[game_id]["header_image"] = ""
+                if info_dict and "data" in info_dict[game_id] and "header_image" in info_dict[game_id]["data"]:
+                    game_data[game_id]["header_image"] = info_dict[game_id]["data"]["header_image"]
+                else:
+                    game_data[game_id]["header_image"] = ""
 
-        except:
-            with open(os.path.join(data_path, f"all_game_data_extended_{cont}.json"), "w", encoding="utf-8") as new_game_data:
-                json.dump(game_data, new_game_data)
-            raise Exception("Error Occurred:", game_id)
+            except:
+                with open(os.path.join(data_path, f"all_game_data_extended_{cont}.json"), "w", encoding="utf-8") as new_game_data:
+                    json.dump(game_data, new_game_data)
+                raise Exception("Error Occurred:", game_id)
 
     with open(os.path.join(data_path, f"all_game_data_extended_{cont}.json"), "w", encoding="utf-8") as new_game_data:
         json.dump(game_data, new_game_data)
@@ -171,4 +173,4 @@ if __name__ == "__main__":
 
     # get_active_users(args.steam_path, cont=10023)
     # get_new_game_info(args.steam_path, cont=0, mode="test")
-    add_data_field(args.steam_path, cont=2639)
+    add_data_field(args.steam_path, cont=6044)

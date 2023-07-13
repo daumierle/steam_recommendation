@@ -17,31 +17,38 @@ class RandomModel:
 
 
 class PopularityModel:
-    def __init__(self, type_):
+    def __init__(self, all_user_games, game_data, type_):
         self.type = type_
+        self.user_games = all_user_games
+        self.game_data = game_data
         pass
 
-    def forward(self, user_games, all_user_games, game_data):
+    def sort_dict(self):
+        if self.type == "recommendations":
+            sorted_game_data = sorted(self.game_data.items(), key=lambda k: int(
+                0 if k[1]["recommendations"] is None else k[1]["recommendations"]), reverse=True)
+        elif self.type == "metacritic":
+            sorted_game_data = sorted(self.game_data.items(), key=lambda k: int(
+                0 if k[1]["metacritic_score"] is None else k[1]["metacritic_score"]), reverse=True)
+        else:
+            game_count = Counter(
+                [str(game) for _, games in self.user_games.items() for game in games["prev_owned_games"]])
+            sorted_game_data = sorted(dict(game_count).items(), key=lambda k: k[1], reverse=True)
+        return dict(sorted_game_data)
+
+    def forward(self, user_games):
         prev_owned_games = [str(game) for game in user_games['prev_owned_games']]
         new_games = dict()
-        for game_id, games in game_data.items():
+        for game_id, games in self.sort_dict().items():
             if game_id not in prev_owned_games:
                 new_games[game_id] = games
 
         if self.type == "recommendations":
-            sorted_new_games = sorted(new_games.items(), key=lambda k: int(0 if k[1]["recommendations"] is None else k[1]["recommendations"]), reverse=True)
-            return list(dict(sorted_new_games).keys())[:20]
+            return list(dict(new_games).keys())[:20]
         elif self.type == "metacritic":
-            sorted_new_games = sorted(new_games.items(), key=lambda k: int(0 if k[1]["metacritic_score"] is None else k[1]["metacritic_score"]), reverse=True)
-            return list(dict(sorted_new_games).keys())[:20]
+            return list(dict(new_games).keys())[:20]
         else:
-            game_count = Counter([str(game) for _, games in all_user_games.items()] for game in games["prev_owned_games"])
-            new_game_count = dict()
-            for game_id, games in dict(game_count).items():
-                if game_id not in prev_owned_games:
-                    new_game_count[game_id] = games
-            sorted_new_games = sorted(new_game_count, reverse=True)
-            return sorted_new_games[:20]
+            return list(dict(new_games).keys())[:20]
 
 
 class SamenessModel:

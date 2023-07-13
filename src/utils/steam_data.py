@@ -30,7 +30,7 @@ class SteamDataset:
 
         label_data = dict()
         for uid, games in user_games.items():
-            label_data[uid] = list(set(games["owned_games"]).difference(set(games["prev_owned_games"])))
+            label_data[uid] = list(set([str(game) for game in games["owned_games"]]).difference(set([str(game) for game in games["prev_owned_games"]])))
 
         return label_data
 

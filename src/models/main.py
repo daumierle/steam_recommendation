@@ -34,9 +34,9 @@ def run_baselines(data_path, models):
             for uid, games in tqdm(test_data.items()):
                 test_preds.append(recsys.forward(games, list(all_game_data.keys())))
         elif model == "popularity":
-            recsys = PopularityModel(type_="")
+            recsys = PopularityModel(test_data, all_game_data, type_="recommendations")
             for uid, games in tqdm(test_data.items()):
-                test_preds.append(recsys.forward(games, test_data, all_game_data))
+                test_preds.append(recsys.forward(games))
         else:
             raise NotImplementedError("Model not found!")
 
