@@ -186,12 +186,21 @@ def run_gnn_models(data_path, model, mode):
             shuffle=False
         )
 
-        test_preds = list()
+        all_preds = list()
         for test_sample in tqdm(test_loader, desc="Test"):
             with torch.no_grad():
                 test_sample.to(device)
-                test_preds.append(recsys(test_sample))
-        print(len(test_labels), len(test_preds), test_preds[0])
+                all_preds.append(recsys(test_sample))
+        all_preds = torch.cat(all_preds, dim=0).cpu().numpy()
+
+        test_preds = list()
+        start = 0
+        for _, new_games in test_labels.items():
+            uid_pred_idx = (all_preds[start:len(new_games)] > 0).nonzero(as_tuple=False).t()[0]
+            uid_preds = [game for i, game in enumerate(new_games) if i in uid_pred_idx]
+            test_preds.append(uid_preds)
+            start = len(new_games)
+        print(len(test_labels), len(test_preds))
 
         # Evaluate
         print(f"+++ Evaluation: {model} model +++")
