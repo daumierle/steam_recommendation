@@ -191,16 +191,16 @@ def run_gnn_models(data_path, model, mode):
             with torch.no_grad():
                 test_sample.to(device)
                 all_preds.append(recsys(test_sample))
-        all_preds = torch.cat(all_preds, dim=0).cpu().numpy()
+        all_preds = torch.cat(all_preds, dim=0).cpu()
 
         test_preds = list()
         start = 0
         for _, new_games in test_labels.items():
-            uid_pred_idx = (all_preds[start:len(new_games)] > 0).nonzero(as_tuple=False).t()[0]
+            uid_pred_idx = (all_preds[start:len(new_games)] > 0).nonzero(as_tuple=False).t().numpy()[0]
             uid_preds = [game for i, game in enumerate(new_games) if i in uid_pred_idx]
             test_preds.append(uid_preds)
             start = len(new_games)
-        print(len(test_labels), len(test_preds))
+        assert len(test_labels) == len(test_preds), print("Labels and preds length not compatible!")
 
         # Evaluate
         print(f"+++ Evaluation: {model} model +++")
