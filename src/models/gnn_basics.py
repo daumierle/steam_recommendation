@@ -30,8 +30,8 @@ class GAT(torch.nn.Module):
 class GCN(torch.nn.Module):
     def __init__(self, hidden_channels):
         super().__init__()
-        self.conv1 = GCNConv(hidden_channels, hidden_channels)
-        self.conv2 = GCNConv(hidden_channels, hidden_channels)
+        self.conv1 = GCNConv(hidden_channels, hidden_channels, add_self_loops=False)
+        self.conv2 = GCNConv(hidden_channels, hidden_channels, add_self_loops=False)
 
     def forward(self, x: torch.Tensor, edge_index: torch.Tensor) -> torch.Tensor:
         x = F.relu(self.conv1(x, edge_index))
