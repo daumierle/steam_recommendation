@@ -196,7 +196,7 @@ def get_all_games(data_path):
                     if "date" in info_dict[appid]["data"]["release_date"]:
                         release_date = info_dict[appid]["data"]["release_date"]["date"].strip()
                     elif "coming_soon" in info_dict[appid]["data"]["release_date"]:
-                        release_date = "coming_soon"
+                        release_date = "Coming soon"
                     else:
                         release_date = ""
 
@@ -229,7 +229,7 @@ def get_all_games(data_path):
                                                            "detailed_description": detailed_description,
                                                            "about_the_game": about_the_game,
                                                            "header_image": header_image}
-                    elif release_date == "coming_soon":
+                    elif release_date in ["Coming soon", "To be announced"]:
                         all_game_data[release_date][appid] = {"name": name, "price": price, "developers": developers,
                                                               "publishers": publishers, "release_date": release_date,
                                                               "genres": genres, "metacritic_score": metacritic,
