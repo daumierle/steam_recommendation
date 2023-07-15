@@ -2,7 +2,7 @@ import torch
 import torch.nn.functional as F
 
 from torch_geometric.data import HeteroData
-from torch_geometric.nn import SAGEConv, to_hetero
+from torch_geometric.nn import SAGEConv, GATv2Conv, GCNConv, HANConv, DeepGCNLayer, GENConv, to_hetero
 
 
 class GraphSAGE(torch.nn.Module):
@@ -14,6 +14,68 @@ class GraphSAGE(torch.nn.Module):
     def forward(self, x: torch.Tensor, edge_index: torch.Tensor) -> torch.Tensor:
         x = F.relu(self.conv1(x, edge_index))
         x = self.conv2(x, edge_index)
+        return x
+
+
+class GAT(torch.nn.Module):
+    def __init__(self, hidden_channels):
+        super().__init__()
+        self.conv1 = GATv2Conv(hidden_channels, hidden_channels)
+        self.conv2 = GATv2Conv(hidden_channels, hidden_channels)
+
+    def forward(self, x: torch.Tensor, edge_index: torch.Tensor) -> torch.Tensor:
+        x = F.relu(self.conv1(x, edge_index))
+        x = self.conv2(x, edge_index)
+        return x
+
+
+class GCN(torch.nn.Module):
+    def __init__(self, hidden_channels):
+        super().__init__()
+        self.conv1 = GCNConv(hidden_channels, hidden_channels)
+        self.conv2 = GCNConv(hidden_channels, hidden_channels)
+
+    def forward(self, x: torch.Tensor, edge_index: torch.Tensor) -> torch.Tensor:
+        x = F.relu(self.conv1(x, edge_index))
+        x = self.conv2(x, edge_index)
+        return x
+
+
+class DeeperGCN(torch.nn.Module):
+    def __init__(self, hidden_channels, num_layers):
+        super().__init__()
+
+        self.layers = torch.nn.ModuleList()
+        for i in range(1, num_layers + 1):
+            conv = GENConv(hidden_channels, hidden_channels, aggr='softmax',
+                           t=1.0, learn_t=True, num_layers=2, norm='layer')
+            norm = torch.nn.LayerNorm(hidden_channels, elementwise_affine=True)
+            act = torch.nn.ReLU(inplace=True)
+
+            layer = DeepGCNLayer(conv, norm, act, block='res+', dropout=0.1,
+                                 ckpt_grad=bool(i % 3))
+            self.layers.append(layer)
+
+    def forward(self, x, edge_index):
+        edge_attr = x['game']
+        x = self.layers[0].conv(x, edge_index, edge_attr)
+
+        for layer in self.layers[1:]:
+            x = layer(x, edge_index, edge_attr)
+
+        x = self.layers[0].act(self.layers[0].norm(x))
+        x = F.dropout(x, p=0.1, training=self.training)
+        return x
+
+
+class HAN(torch.nn.Module):
+    def __init__(self, hidden_channels, metadata):
+        super().__init__()
+        self.han_conv = HANConv(hidden_channels, hidden_channels,
+                                metadata=metadata, heads=8, dropout=0.1)
+
+    def forward(self, x: torch.Tensor, edge_index: torch.Tensor) -> torch.Tensor:
+        x = self.han_conv(x, edge_index)
         return x
 
 
@@ -40,6 +102,14 @@ class GNNModel(torch.nn.Module):
         # Instantiate homogeneous GNN
         if model == "GraphSAGE":
             self.gnn = GraphSAGE(hidden_channels)
+        elif model == "GAT":
+            self.gnn = GAT(hidden_channels)
+        elif model == "GCN":
+            self.gnn = GCN(hidden_channels)
+        elif model == "DeeperGCN":
+            self.gnn = DeeperGCN(hidden_channels, num_layers=16)
+        elif model == "HAN":
+            self.gnn = HAN(hidden_channels, metadata)
         else:
             raise NotImplementedError("Model not found!")
         # Convert GNN model into a heterogeneous variant
