@@ -272,10 +272,10 @@ def get_all_games(data_path):
             continue
 
     for rel_year, val in all_game_data.items():
-        with open(os.path.join(data_path, f"{rel_year}_games.json"), "w", encoding="utf-8") as year_file:
+        with open(os.path.join(data_path, f"all_games/{rel_year}_games.json"), "w", encoding="utf-8") as year_file:
             json.dump(val, year_file)
 
-    with open(os.path.join(data_path, "error_games.json"), "w", encoding="utf-8") as error_file:
+    with open(os.path.join(data_path, "all_games/error_games.json"), "w", encoding="utf-8") as error_file:
         json.dump(error_games, error_file)
 
 
