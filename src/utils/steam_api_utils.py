@@ -259,7 +259,7 @@ def get_all_games(data_path):
                                                                    "about_the_game": about_the_game,
                                                                    "header_image": header_image}
 
-        except requests.exceptions.RequestException as e:
+        except requests.exceptions.RequestException as reqe:
             request_exception += 1
             error_games.append(app['appid'])
             if request_exception >= 10:
@@ -267,7 +267,8 @@ def get_all_games(data_path):
             else:
                 continue
 
-        except:
+        except Exception as e:
+            print("Error:", e)
             error_games.append(app['appid'])
             continue
 
