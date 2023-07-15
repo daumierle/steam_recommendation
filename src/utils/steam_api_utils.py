@@ -230,13 +230,13 @@ def get_all_games(data_path):
                                                            "about_the_game": about_the_game,
                                                            "header_image": header_image}
                     elif release_date in ["Coming soon", "To be announced"]:
-                        all_game_data[release_date][appid] = {"name": name, "price": price, "developers": developers,
-                                                              "publishers": publishers, "release_date": release_date,
-                                                              "genres": genres, "metacritic_score": metacritic,
-                                                              "recommendations": recommendations,
-                                                              "detailed_description": detailed_description,
-                                                              "about_the_game": about_the_game,
-                                                              "header_image": header_image}
+                        all_game_data["coming_soon"][appid] = {"name": name, "price": price, "developers": developers,
+                                                               "publishers": publishers, "release_date": release_date,
+                                                               "genres": genres, "metacritic_score": metacritic,
+                                                               "recommendations": recommendations,
+                                                               "detailed_description": detailed_description,
+                                                               "about_the_game": about_the_game,
+                                                               "header_image": header_image}
                     else:
                         if year:
                             all_game_data[year[0]][appid] = {"name": name, "price": price,
