@@ -20,12 +20,10 @@ class GraphSAGE(torch.nn.Module):
 class GAT(torch.nn.Module):
     def __init__(self, hidden_channels):
         super().__init__()
-        self.conv1 = GATv2Conv(hidden_channels, hidden_channels, heads=8, add_self_loops=False)
-        self.conv2 = GATv2Conv(hidden_channels, hidden_channels, heads=8, add_self_loops=False)
+        self.gat_conv = GATv2Conv(hidden_channels, hidden_channels, heads=8, add_self_loops=False)
 
     def forward(self, x: torch.Tensor, edge_index: torch.Tensor) -> torch.Tensor:
-        x = F.relu(self.conv1(x, edge_index))
-        x = self.conv2(x, edge_index)
+        x = self.gat_conv(x, edge_index)
         return x
 
 
@@ -57,11 +55,10 @@ class DeeperGCN(torch.nn.Module):
             self.layers.append(layer)
 
     def forward(self, x, edge_index):
-        edge_attr = x['game']
-        x = self.layers[0].conv(x, edge_index, edge_attr)
+        x = self.layers[0].conv(x, edge_index)
 
         for layer in self.layers[1:]:
-            x = layer(x, edge_index, edge_attr)
+            x = layer(x, edge_index)
 
         x = self.layers[0].act(self.layers[0].norm(x))
         x = F.dropout(x, p=0.1, training=self.training)
