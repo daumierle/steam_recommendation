@@ -10,7 +10,7 @@ import torch_geometric.transforms as T
 from torch_geometric.loader import LinkNeighborLoader
 
 from utils.steam_data import SteamDataset, SteamGraphData
-from models.baselines import RandomModel, PopularityModel
+from models.baselines import RandomModel, PopularityModel, SamenessModel
 from models.gnn_basics import GNNModel
 from utils.metrics import Metrics
 
@@ -35,6 +35,10 @@ def run_baselines(data_path, models):
                 test_preds.append(recsys.forward(games, list(all_game_data.keys())))
         elif model == "popularity":
             recsys = PopularityModel(test_data, all_game_data, type_="recommendations")
+            for uid, games in tqdm(test_data.items()):
+                test_preds.append(recsys.forward(games))
+        elif model == "same":
+            recsys = SamenessModel(all_game_data, type_="publishers")
             for uid, games in tqdm(test_data.items()):
                 test_preds.append(recsys.forward(games))
         else:
@@ -223,7 +227,7 @@ if __name__ == "__main__":
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     if args.method == "baseline":
-        run_baselines(args.data_path, ["random", "popularity"])
+        run_baselines(args.data_path, ["random", "popularity", "same"])
     elif args.method == "graph":
         run_gnn_models(args.data_path, "GraphSAGE", args.mode)
     else:

@@ -1,4 +1,5 @@
 import random
+import pandas as pd
 from collections import Counter
 
 random.seed(13)
@@ -52,8 +53,26 @@ class PopularityModel:
 
 
 class SamenessModel:
-    def __init__(self, type_):
+    def __init__(self, game_data, type_):
+        self.type = type_
+        self.game_data = game_data
         pass
+
+    def game_list(self):
+        game_suggestion = dict()
+        for k, values in self.game_data.items():
+            for v in values[self.type]:
+                game_suggestion.setdefault(v, []).append(k)
+        return game_suggestion
+
+    def forward(self, user_games):
+        prev_owned_games = [str(game) for game in user_games['prev_owned_games']]
+        favorite_genre = Counter([genre for game_id, games in self.game_data.items() for genre in games[self.type]
+                                  if game_id in prev_owned_games])
+        top_genre = sorted(dict(favorite_genre), reverse=True)[0]
+        new_games = [game for game in self.game_list()[top_genre] if game not in prev_owned_games]
+        random.shuffle(new_games)
+        return new_games[:20]
 
 
 class ContentBasedModel:
@@ -62,6 +81,14 @@ class ContentBasedModel:
 
 
 class ClusteringModel:
-    def __init__(self):
+    def __init__(self, game_data):
+        self.game_data = game_data
         pass
+
+    def dict_to_df(self):
+        data = pd.DataFrame(self.game_data)
+        return data
+
+    def forward(self):
+
 
